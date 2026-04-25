@@ -9,13 +9,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const TMDB_TOKEN = process.env.TMDB_TOKEN;     // Bearer token (largo)
-const TMDB_KEY   = process.env.TMDB_API_KEY;   // API key (corta, fallback)
+const TMDB_KEY   = process.env.TMDB_API_KEY;
 const GOOGLE_KEY = process.env.GOOGLE_PLACES_KEY;
 const TM_KEY     = process.env.TICKETMASTER_KEY;
 
 console.log('=== VARIABLES ===');
-console.log('TMDB_TOKEN:', TMDB_TOKEN ? 'OK' : 'UNDEFINED');
 console.log('TMDB_API_KEY:', TMDB_KEY ? 'OK' : 'UNDEFINED');
 console.log('GOOGLE_KEY:', GOOGLE_KEY ? 'OK' : 'UNDEFINED');
 console.log('=================');
@@ -52,7 +50,6 @@ app.get('/', (req, res) => {
     version: '2.1',
     paises_soportados: Object.keys(PAISES).length,
     latam: true,
-    tmdb_token: TMDB_TOKEN ? 'OK' : 'FALTA',
     tmdb_key: TMDB_KEY ? 'OK' : 'FALTA',
     google_key: GOOGLE_KEY ? 'OK' : 'FALTA',
   });
@@ -71,21 +68,12 @@ app.get('/cine', async (req, res) => {
   const paisData = getPais(pais);
 
   try {
-    let config;
-    if (TMDB_TOKEN) {
-      // Usar Bearer token (más seguro)
-      config = {
-        headers: { Authorization: `Bearer ${TMDB_TOKEN}` },
-        params: { language: 'es-419', region: paisData.tmCode, page: 1 },
-      };
-    } else if (TMDB_KEY) {
-      // Fallback a api_key
-      config = {
-        params: { api_key: TMDB_KEY, language: 'es-419', region: paisData.tmCode, page: 1 },
-      };
-    } else {
-      return res.status(500).json({ ok: false, error: 'Configura TMDB_TOKEN o TMDB_API_KEY en Railway' });
+    if (!TMDB_KEY) {
+      return res.status(500).json({ ok: false, error: 'Configura TMDB_API_KEY en Railway' });
     }
+    const config = {
+      params: { api_key: TMDB_KEY, language: 'es-419', region: paisData.tmCode, page: 1 },
+    };
 
     const response = await axios.get(
       'https://api.themoviedb.org/3/movie/now_playing', config
