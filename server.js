@@ -75,11 +75,14 @@ app.get('/cine', async (req, res) => {
       'https://api.themoviedb.org/3/movie/now_playing',
       {
         params: {
-          api_key: TMDB_KEY,
           language: 'es-419',  // Español latinoamericano
           region: paisData.tmCode,
           page: 1,
         },
+        headers: {
+          'Authorization': `Bearer ${TMDB_KEY}`,
+          'Content-Type': 'application/json;charset=utf-8'
+        }
       }
     );
 
